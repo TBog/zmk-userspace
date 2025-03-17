@@ -20,3 +20,8 @@ if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
   # behaviors
   zephyr_library_sources_ifdef(CONFIG_ELPEKENIN_BEHAVIOR_DEFAULT_LAYER src/behaviors/behavior_default_layer.c)
 endif()
+
+if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL OR CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS)
+    # features
+    zephyr_library_sources_ifdef(CONFIG_TBOG_LOCK_INDICATOR src/lock_indicator.c)
+endif()

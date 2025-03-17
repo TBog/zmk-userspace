@@ -3,5 +3,11 @@ config ELPEKENIN_LAYER_CALLBACK
     default y
     depends on DT_HAS_ELPEKENIN_LAYER_CALLBACK_ENABLED
 
+config TBOG_LOCK_INDICATOR
+    bool "TBog Lock indicator"
+    select ZMK_HID_INDICATORS
+    default y
+    depends on DT_HAS_TBOG_LOCK_INDICATOR_ENABLED
+    
 rsource "Kconfig.behaviors"
 
