@@ -40,17 +40,30 @@ static struct lock_indicator_config *lock_indicator_instances[] = {
     DT_INST_FOREACH_CHILD(0, LOCK_INDICATOR_DATA_REF_AND_COMMA)
 };
 
+static zmk_hid_indicators_t zmk_event_indicator_previous = {0};
+
 #define LOCK_INDICATOR_INSTANCE_COUNT ARRAY_SIZE(lock_indicator_instances)
 
 static int lock_indicator_listener(const zmk_event_t *eh) {
     const struct zmk_hid_indicators_changed *ev = as_zmk_hid_indicators_changed(eh);
+    const zmk_hid_indicators_t indicators = ev->indicators;
+    const size_t num_indicators = LOCK_INDICATOR_INSTANCE_COUNT;
 
+    LOG_INF("lock_indicator_listener indicators=%#04X count=%d", indicators, num_indicators);
     // Iterate over all instances
-    for (size_t i = 0; i < LOCK_INDICATOR_INSTANCE_COUNT; i+=1) {
+    for (size_t i = 0; i < num_indicators; i+=1) {
         const struct lock_indicator_config *data = lock_indicator_instances[i];
-        const bool new_led_state = (ev->indicators & data->indicator_mask) != 0;
-        gpio_pin_set_dt(&data->led_gpio, new_led_state);
+        const bool old_led_state = (zmk_event_indicator_previous & data->indicator_mask) != 0;
+        const bool new_led_state = (indicators & data->indicator_mask) != 0;
+        if (old_led_state != new_led_state) {
+            LOG_INF("lock-indicator #%d set led (pin %d) state=%s", i, data->led_gpio.pin, new_led_state ? "ON" : "OFF");
+            gpio_pin_set_dt(&data->led_gpio, new_led_state);
+        } else {
+            LOG_INF("lock-indicator #%d not changed", i);
+        }
     }
+
+    zmk_event_indicator_previous = indicators;
 
     return ZMK_EV_EVENT_BUBBLE;
 }
@@ -61,13 +74,13 @@ static int sys_lock_indicator_init() {
         const struct lock_indicator_config *data = lock_indicator_instances[i];
     
         if (!device_is_ready(data->led_gpio.port)) {
-            printk("Lock Indicator GPIO device not ready\n");
+            LOG_WRN("Lock Indicator GPIO device not ready\n");
             continue;//return -ENODEV;
         }
     
         int ret = gpio_pin_configure_dt(&data->led_gpio, GPIO_OUTPUT_INACTIVE);
         if (ret < 0) {
-            printk("Failed to configure Lock Indicator GPIO: %d\n", ret);
+            LOG_WRN("Failed to configure Lock Indicator GPIO: %d\n", ret);
             continue;//return ret;
         }
         gpio_pin_set_dt(&data->led_gpio, 0);
