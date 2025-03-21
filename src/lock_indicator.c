@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2024 TBog.rocks
- *
  * SPDX-License-Identifier: MIT
  */
 
@@ -10,6 +9,7 @@
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include <zephyr/device.h>
+#include <zephyr/devicetree.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 
@@ -69,6 +69,7 @@ static int lock_indicator_listener(const zmk_event_t *eh) {
 }
 
 static int sys_lock_indicator_init() {
+    size_t count = 0;
     // Iterate over all instances
     for (size_t i = 0; i < LOCK_INDICATOR_INSTANCE_COUNT; i+=1) {
         const struct lock_indicator_config *data = lock_indicator_instances[i];
@@ -84,7 +85,9 @@ static int sys_lock_indicator_init() {
             continue;//return ret;
         }
         gpio_pin_set_dt(&data->led_gpio, 0);
+        count += 1;
     }
+    LOG_INF("lock-indicator initialized %d/%d", count, LOCK_INDICATOR_INSTANCE_COUNT);
     return 0;
 }
 

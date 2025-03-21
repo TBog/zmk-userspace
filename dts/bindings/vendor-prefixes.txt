@@ -1,2 +1,2 @@
 elpekenin	elpekenin
-tbog    TBog
+tbog	TBog
