@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 description: Enable gpio/led behavior(s) when a lock (caps/scroll/num/etc.) is activated
+
 compatible: "tbog,lock-indicator"
+
 properties:
   gpios:
     type: phandle-array
@@ -10,5 +12,6 @@ properties:
     description: GPIO pin(s) for the LED.
   indicator-mask:
     type: int
+    default: 2
     required: false
     description: Bitmask of HID indicators to monitor.
