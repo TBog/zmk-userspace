@@ -76,8 +76,15 @@ static int sys_lock_indicator_init() {
         const struct lock_indicator_config *data = lock_indicator_child[i];
     
         if (!gpio_is_ready_dt(&data->led_gpio)) {
+
+            const struct device *gpio_dev = device_get_binding(data->led_gpio.port->name);
+            if (!gpio_dev || !device_is_ready(gpio_dev)) {
+                LOG_WRN("Lock Indicator #%d GPIO device '%s' not ready", i, data->led_gpio.port->name);
+                continue;
+            }
+
             LOG_WRN("Lock Indicator #%d GPIO pin %d not ready", i, data->led_gpio.pin);
-            continue;//return -ENODEV;
+            //continue;//return -ENODEV;
         }
     
         int ret = gpio_pin_configure_dt(&data->led_gpio, GPIO_OUTPUT_INACTIVE);
@@ -96,6 +103,6 @@ static int sys_lock_indicator_init() {
 
 ZMK_LISTENER(lock_indicator, lock_indicator_listener);
 ZMK_SUBSCRIPTION(lock_indicator, zmk_hid_indicators_changed);
-SYS_INIT(sys_lock_indicator_init, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+SYS_INIT(sys_lock_indicator_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
 
 //#endif // DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
