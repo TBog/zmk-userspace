@@ -76,6 +76,10 @@ static int sys_lock_indicator_init() {
         const struct lock_indicator_config *data = lock_indicator_instance[i];
     
         if (!gpio_is_ready_dt(&data->led_gpio)) {
+            if (!data->led_gpio.port) {
+                LOG_WRN("Lock Indicator #%d GPIO not set correctly", i);
+                continue;
+            }
 
             const struct device *gpio_dev = device_get_binding(data->led_gpio.port->name);
             if (!gpio_dev || !device_is_ready(gpio_dev)) {
