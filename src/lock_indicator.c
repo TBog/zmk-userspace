@@ -75,17 +75,19 @@ static int sys_lock_indicator_init() {
     for (size_t i = 0; i < num_indicators; i+=1) {
         const struct lock_indicator_config *data = lock_indicator_child[i];
     
-        if (!device_is_ready(data->led_gpio.port)) {
-            LOG_WRN("Lock Indicator GPIO device not ready\n");
+        if (!gpio_is_ready_dt(&data->led_gpio)) {
+            LOG_WRN("Lock Indicator #%d GPIO port not ready", i);
             continue;//return -ENODEV;
         }
     
         int ret = gpio_pin_configure_dt(&data->led_gpio, GPIO_OUTPUT_INACTIVE);
         if (ret < 0) {
-            LOG_WRN("Failed to configure Lock Indicator GPIO: %d\n", ret);
+            LOG_WRN("Failed to configure Lock Indicator #%d GPIO: %d", i, ret);
             continue;//return ret;
         }
+        // ensure LED is off
         gpio_pin_set_dt(&data->led_gpio, 0);
+        LOG_DBG("Lock indicator #%d initialized and turned off", i);
         count += 1;
     }
     LOG_INF("lock-indicator initialized %d/%d", count, num_indicators);
