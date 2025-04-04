@@ -5,16 +5,13 @@ description: Enable gpio/led behavior(s) when a lock (caps/scroll/num/etc.) is a
 
 compatible: "tbog,lock-indicator"
 
-child-binding:
-  description: Configuration for a led.
-
-  properties:
-    gpios:
-      type: phandle-array
-      required: true
-      description: GPIO pin for the LED.
-    indicator-mask:
-      type: int
-      default: 2
-      required: false
-      description: Bitmask of HID indicators to monitor.
+properties:
+  gpios:
+    type: phandle-array
+    required: true
+    description: GPIO pin for the LED.
+  indicator-mask:
+    type: int
+    default: 2
+    required: false
+    description: Bitmask of HID indicators to monitor.

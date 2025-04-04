@@ -31,28 +31,28 @@ struct lock_indicator_config {
         .indicator_mask = DT_INST_PROP_OR(inst, indicator_mask, HID_KBD_LED_CAPS_LOCK),          \
     };
 
-DT_INST_FOREACH_CHILD(0, LI_STRUCT)
+DT_FOREACH_STATUS_OKAY(DT_DRV_COMPAT, LI_STRUCT)
 
 #define LOCK_INDICATOR_DATA_REF_AND_COMMA(n) \
     &lock_indicator_config_##n,
 
-static struct lock_indicator_config *lock_indicator_child[] = {
-    DT_INST_FOREACH_CHILD(0, LOCK_INDICATOR_DATA_REF_AND_COMMA)
+static struct lock_indicator_config *lock_indicator_instance[] = {
+    DT_FOREACH_STATUS_OKAY(DT_DRV_COMPAT, LOCK_INDICATOR_DATA_REF_AND_COMMA)
 };
 
 static zmk_hid_indicators_t zmk_event_indicator_previous = {0};
 
-#define LOCK_INDICATOR_CHILD_COUNT ARRAY_SIZE(lock_indicator_child)
+#define LOCK_INDICATOR_INSTANCE_COUNT ARRAY_SIZE(lock_indicator_instance)
 
 static int lock_indicator_listener(const zmk_event_t *eh) {
     const struct zmk_hid_indicators_changed *ev = as_zmk_hid_indicators_changed(eh);
     const zmk_hid_indicators_t indicators = ev->indicators;
-    const size_t num_indicators = LOCK_INDICATOR_CHILD_COUNT;
+    const size_t num_indicators = LOCK_INDICATOR_INSTANCE_COUNT;
 
     LOG_INF("lock_indicator_listener indicators=%#04X count=%d", indicators, num_indicators);
     // Iterate over all instances
     for (size_t i = 0; i < num_indicators; i+=1) {
-        const struct lock_indicator_config *data = lock_indicator_child[i];
+        const struct lock_indicator_config *data = lock_indicator_instance[i];
         const bool old_led_state = (zmk_event_indicator_previous & data->indicator_mask) != 0;
         const bool new_led_state = (indicators & data->indicator_mask) != 0;
         if (old_led_state != new_led_state) {
@@ -70,10 +70,10 @@ static int lock_indicator_listener(const zmk_event_t *eh) {
 
 static int sys_lock_indicator_init() {
     size_t count = 0;
-    const size_t num_indicators = LOCK_INDICATOR_CHILD_COUNT;
+    const size_t num_indicators = LOCK_INDICATOR_INSTANCE_COUNT;
     // Iterate over all instances
     for (size_t i = 0; i < num_indicators; i+=1) {
-        const struct lock_indicator_config *data = lock_indicator_child[i];
+        const struct lock_indicator_config *data = lock_indicator_instance[i];
     
         if (!gpio_is_ready_dt(&data->led_gpio)) {
 
