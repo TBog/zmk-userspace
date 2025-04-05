@@ -23,12 +23,14 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 struct lock_indicator_config {
     const struct gpio_dt_spec led_gpio;
     uint8_t indicator_mask;
+    uint8_t status;
 };
 
-#define LI_STRUCT(inst)                                                                          \
-    static struct lock_indicator_config lock_indicator_config_##inst = {                         \
-        .led_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, gpios, {0}),                                  \
-        .indicator_mask = DT_INST_PROP_OR(inst, indicator_mask, HID_KBD_LED_CAPS_LOCK),          \
+#define LI_STRUCT(n)                                                                          \
+    static struct lock_indicator_config lock_indicator_config_##n = {                         \
+        .led_gpio = GPIO_DT_SPEC_INST_GET(n, gpios),                                          \
+        .indicator_mask = DT_INST_PROP_OR(n, indicator_mask, HID_KBD_LED_CAPS_LOCK),          \
+        .status = 0,                                                                          \
     };
 
 DT_FOREACH_STATUS_OKAY(DT_DRV_COMPAT, LI_STRUCT)
@@ -53,6 +55,10 @@ static int lock_indicator_listener(const zmk_event_t *eh) {
     // Iterate over all instances
     for (size_t i = 0; i < num_indicators; i+=1) {
         const struct lock_indicator_config *data = lock_indicator_instance[i];
+        if (data->status != -1) {
+            LOG_WRN("Lock Indicator #%d status = %d", i, data->status);
+            continue;
+        }
         const bool old_led_state = (zmk_event_indicator_previous & data->indicator_mask) != 0;
         const bool new_led_state = (indicators & data->indicator_mask) != 0;
         if (old_led_state != new_led_state) {
@@ -99,6 +105,7 @@ static int sys_lock_indicator_init() {
         // ensure LED is off
         gpio_pin_set_dt(&data->led_gpio, 0);
         LOG_DBG("Lock Indicator #%d initialized and turned off", i);
+        data->status = -1;
         count += 1;
     }
     LOG_INF("lock-indicator initialized %d/%d", count, num_indicators);
