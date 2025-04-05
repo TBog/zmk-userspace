@@ -79,7 +79,7 @@ static int sys_lock_indicator_init() {
     const size_t num_indicators = LOCK_INDICATOR_INSTANCE_COUNT;
     // Iterate over all instances
     for (size_t i = 0; i < num_indicators; i+=1) {
-        const struct lock_indicator_config *data = lock_indicator_instance[i];
+        struct lock_indicator_config *data = lock_indicator_instance[i];
     
         if (!gpio_is_ready_dt(&data->led_gpio)) {
             if (!data->led_gpio.port) {
