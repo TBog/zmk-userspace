@@ -23,8 +23,9 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 struct lock_indicator_config {
     const struct gpio_dt_spec led_gpio;
     uint8_t indicator_mask;
-    uint8_t status;
+    int8_t status;
 };
+
 
 #define LI_STRUCT(n)                                                                     \
     static struct lock_indicator_config lock_indicator_config_##n = {                    \
@@ -80,23 +81,25 @@ static int sys_lock_indicator_init() {
     // Iterate over all instances
     for (size_t i = 0; i < num_indicators; i+=1) {
         struct lock_indicator_config *data = lock_indicator_instance[i];
-    
+        data->status = 1;
         if (!gpio_is_ready_dt(&data->led_gpio)) {
             if (!data->led_gpio.port) {
+                data->status = 3;
                 LOG_WRN("Lock Indicator #%d GPIO not set correctly", i);
                 continue;
             }
 
             const struct device *gpio_dev = device_get_binding(data->led_gpio.port->name);
             if (!gpio_dev || !device_is_ready(gpio_dev)) {
+                data->status = 4;
                 LOG_WRN("Lock Indicator #%d GPIO device '%s' not ready", i, data->led_gpio.port->name);
                 continue;
             }
 
             LOG_WRN("Lock Indicator #%d GPIO pin %d not ready", i, data->led_gpio.pin);
-            //continue;//return -ENODEV;
+            continue;//return -ENODEV;
         }
-    
+        data->status = 2;
         int ret = gpio_pin_configure_dt(&data->led_gpio, GPIO_OUTPUT_INACTIVE);
         if (ret < 0) {
             LOG_WRN("Failed to configure Lock Indicator #%d GPIO: %d", i, ret);
