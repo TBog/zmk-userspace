@@ -26,11 +26,11 @@ struct lock_indicator_config {
     uint8_t status;
 };
 
-#define LI_STRUCT(n)                                                                          \
-    static struct lock_indicator_config lock_indicator_config_##n = {                         \
-        .led_gpio = GPIO_DT_SPEC_INST_GET(n, gpios),                                          \
-        .indicator_mask = DT_INST_PROP_OR(n, indicator_mask, HID_KBD_LED_CAPS_LOCK),          \
-        .status = 0,                                                                          \
+#define LI_STRUCT(n)                                                                     \
+    static struct lock_indicator_config lock_indicator_config_##n = {                    \
+        .led_gpio = GPIO_DT_SPEC_GET(n, gpios),                                          \
+        .indicator_mask = DT_PROP_OR(n, indicator_mask, HID_KBD_LED_CAPS_LOCK),          \
+        .status = 0,                                                                     \
     };
 
 DT_FOREACH_STATUS_OKAY(DT_DRV_COMPAT, LI_STRUCT)
